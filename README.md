@@ -1,1 +1,1 @@
-# learn_go
+# Repo of Learning GO

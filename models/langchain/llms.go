@@ -1,9 +1,12 @@
-package models
+package langchain
 
 import (
 	"context"
+	"fmt"
 	"github.com/tmc/langchaingo/llms/ollama"
 	"github.com/tmc/langchaingo/llms/openai"
+	"log"
+	"sync"
 )
 
 type LLM interface {
@@ -80,4 +83,45 @@ func (o *OpenAIModel) GenerateFromPrompt() (func(ctx context.Context, text strin
 		return llm.Call(ctx, text)
 	}
 	return generatedText, nil
+}
+
+func GenerateLLMPrompts(ctx context.Context, llm LLM, prompts []string) {
+	generator, err := llm.GenerateFromPrompt()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	promptChannel := make(chan string, 1)
+	errChannel := make(chan error, 1)
+	wg := sync.WaitGroup{}
+
+	for _, p := range prompts {
+		wg.Add(1)
+		go func(p string) {
+			defer wg.Done()
+			llmText, err := generator(ctx, p)
+			if err != nil {
+				errChannel <- err
+			}
+			promptChannel <- llmText
+		}(p)
+	}
+
+	go func() {
+		for p := range promptChannel {
+			fmt.Println(p)
+		}
+	}()
+	go func() {
+		for err := range errChannel {
+			fmt.Println(err)
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(promptChannel)
+		close(errChannel)
+	}()
+	wg.Wait()
 }

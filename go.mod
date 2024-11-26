@@ -3,7 +3,7 @@ module github.com/karsharma10/learn_go
 go 1.22.5
 
 require (
-	github.com/gorilla/mux v1.8.1
+	github.com/joho/godotenv v1.5.1
 	github.com/openai/openai-go v0.1.0-alpha.38
 	github.com/tmc/langchaingo v0.1.12
 )

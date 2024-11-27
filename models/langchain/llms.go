@@ -3,9 +3,14 @@ package langchain
 import (
 	"context"
 	"fmt"
+	"github.com/tmc/langchaingo/chains"
+	"github.com/tmc/langchaingo/documentloaders"
+	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/ollama"
 	"github.com/tmc/langchaingo/llms/openai"
+	"github.com/tmc/langchaingo/textsplitter"
 	"log"
+	"strings"
 	"sync"
 )
 
@@ -124,4 +129,19 @@ func GenerateLLMPrompts(ctx context.Context, llm LLM, prompts []string) {
 		close(errChannel)
 	}()
 	wg.Wait()
+}
+
+// SummarizationChain is a langchain implementation of using chains for summarizing
+func SummarizationChain(ctx context.Context, doc *string, llm llms.Model) {
+	llmSummarizationChain := chains.LoadRefineSummarization(llm)
+	docs, err := documentloaders.NewText(strings.NewReader(*doc)).LoadAndSplit(ctx,
+		textsplitter.NewRecursiveCharacter(),
+	)
+	outputValues, err := chains.Call(ctx, llmSummarizationChain, map[string]any{"input_documents": docs})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	out := outputValues["text"].(string)
+	fmt.Println(out)
 }

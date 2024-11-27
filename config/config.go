@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/joho/godotenv"
+	"log"
 	"os"
 )
 
@@ -9,16 +10,19 @@ const (
 	OpenAIKey = "OPENAI_KEY"
 )
 
-type Config struct {
+type Configs struct {
 	OpenAIKey string
 }
 
-func InitConfig() (*Config, error) {
+type Config func(*Configs)
+
+func WithOpenAI() Config {
 	err := godotenv.Load(".env")
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
-	return &Config{
-		OpenAIKey: os.Getenv(OpenAIKey),
-	}, nil
+	key := os.Getenv(OpenAIKey)
+	return func(configs *Configs) {
+		configs.OpenAIKey = key
+	}
 }

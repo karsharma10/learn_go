@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
@@ -18,6 +19,8 @@ type Configs struct {
 	Password  string
 	Dbname    string
 }
+
+type config map[string]any
 
 type Config func(*Configs)
 
@@ -43,5 +46,11 @@ func WithDb() Config {
 		configs.User = os.Getenv("DB_USER")
 		configs.Password = os.Getenv("DB_PASSWORD")
 		configs.Dbname = os.Getenv("DB_NAME")
+	}
+}
+
+func (c config) printConfig() {
+	for _, e := range c {
+		fmt.Println(e)
 	}
 }
